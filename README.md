@@ -222,6 +222,48 @@ A visible share of turns goes on memory maintenance. On a long project with hard
 knowledge, that pays for itself the first time a session resumes already knowing why an approach was
 rejected. On a one-day task it is pure overhead — don't.
 
+## Prior art, and what was borrowed
+
+Honest accounting, because some of this was arrived at here and some was not.
+
+**Arrived at independently, then found in the literature.** The three-set split and the idea that
+enforcement matters more than recording were built before any of this was read. A 2026 paper,
+[PROJECTMEM](https://arxiv.org/pdf/2606.12329), argues the bottleneck for coding agents is not model
+capability but the absence of "a durable record of what was decided, tried, and ruled out", stored as
+an append-only plain-text log — which is what the plan file is. Convergence, not influence. Noting it
+because independent arrival at the same shape is the best evidence available that the shape is right.
+
+**Borrowed: the name for the failure mode.** The decay this guards against — memory that parses
+perfectly and asserts something no longer true — was found here the hard way, twice, before it had a
+name. The literature calls it **spec rot**, and that term comes from others' work, surveyed in
+[Augment's write-up on instruction-file context](https://www.augmentcode.com/blog/your-agents-context-is-a-junk-drawer).
+
+**Borrowed: the health-gate idea.** A case study of eight months of agent-assisted development,
+[arXiv 2609.05510](https://arxiv.org/pdf/2609.05510), describes adding a health gate and heartbeat
+telemetry specifically to catch memory failures. That is the direct model for making a load failure
+*loud* rather than silent — the prior behaviour here was a quiet parenthesis that went unread for
+days.
+
+**Examined and deliberately not adopted:** [claude-mem](https://github.com/thedotmack/claude-mem),
+which stores sessions, observations and summaries in SQLite with full-text search plus a vector
+database, captures automatically, and exposes retrieval to agents through MCP tools in an
+index-then-context-then-detail order. Reading it settled two decisions here. First, no database: all
+the memory in a long-running project came to roughly 450 KB, which a full grep searches in about 25
+ms, so an index buys nothing it does not already have. Second, and more important, automatic capture
+with no verification layer is the opposite trade to the one made here — a false claim would be
+captured, summarised and served to a later session as fact. Its layered retrieval order is a good
+idea that is not implemented here; a cheap version was proposed and dropped.
+
+**Also surveyed:** [an eBPF-based study of layered rule enforcement](https://eunomia.dev/blog/2026/07/15/ebpf-ai-agent-policy-enforcement/),
+[ContextCov on compiling instruction files into executable checks](https://arxiv.org/pdf/2603.00822),
+and reports that larger instruction files measurably *reduce* instruction-following. That last finding
+is why `rules/reasoning.md` is deliberately short and why adding a rule to it is treated as weakening
+the others.
+
+**Read as summaries, not in full.** The papers above were found through search and read as abstracts
+and search summaries rather than end to end; claude-mem's own documentation was read directly. Treat
+the characterisations as accurate to what was read, not as a literature review.
+
 ## Honest limitations
 
 - **Windows-tested.** The hooks are plain Python and should port, but the suite's file-locking and
