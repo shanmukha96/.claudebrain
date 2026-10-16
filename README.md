@@ -140,6 +140,82 @@ PYTHONIOENCODING=utf-8 python tests/test_unit.py
 (The encoding variable matters: these tests print the `▶` glyph, and a Windows console without it
 dies on its own output rather than on a failure.)
 
+## How to use it correctly
+
+The order matters more than the pieces do.
+
+**1. Install, then `/memory-init` in each project.** It surveys the real codebase, asks for the final
+goal, the hard constraints and the first objective, and writes the three files. Correct the checklist
+it proposes before any work starts — everything downstream reads it.
+
+**2. Set the `Verify:` line in the plan header to the project's real commands.** This is the single
+most load-bearing line in the system: it is what "done" means, and the verify gate will not let a
+turn end on changed code until those exact commands have run.
+
+**3. Keep the pointer on line 1 of the checklist current, and starting with an id.** Every new session
+is handed that id's plan section. Prose there means no reasoning is injected at all.
+
+**4. Brief agents from the written section, never from memory.** Open the plan or checklist entry and
+quote it. A brief written from recollection is the single most expensive failure available — it
+spends an entire agent run on the wrong target, and it looks like progress while it does.
+
+**5. When an agent hands back, run the verify commands in that turn.** The hand-back is the trigger,
+not the end of the session. If they cannot run — another agent is mid-edit, say — record
+`Evidence: unverified - <why>` and move on. An honest "cannot" is a legal answer; a silent skip is not.
+
+**6. `/review-changes` before starting the next wave of work.** The review gate enforces this: it
+refuses to launch a code-writing agent while the ledger is behind HEAD. Tick findings in the ledger in
+the same turn you fix them, or the next reviewer spends its budget re-finding solved work.
+
+**7. `/learn` when something is learned — not at the end of the session.** One lesson, one rule, filed
+once. Its shape test is the point: if complying with the new rule would leave no mark in a reply, it
+gets rewritten until it does, because an invisible rule does not fire.
+
+**8. `/retro` at the end of a session, and when the date changes.** It audits which rules were broken,
+increments the mistake counter, and files each lesson in exactly one place. At three occurrences of
+the same mistake it demands a mechanism rather than a stronger intention.
+
+**9. `/clear` and resume from the files when the context is polluted or the topic changes.** Clearing
+is cheap precisely because the memory files carry the state — and it is also the only thing that
+exercises the load path, so a session that never clears is one whose memory layer is never tested.
+
+**10. `/memory-consolidate` when the plan file outgrows its window.** Finished goals collapse to one
+line; the reasoning is kept.
+
+## What it has actually caught
+
+Not hypotheticals. Each of these is a gate stopping something that had already gone wrong.
+
+**A claim of "done" with nothing run.** The verify gate blocked the end of a turn twice in one evening
+while agents were still editing, forcing `Evidence: unverified - <why>` instead of a green claim.
+Earlier in the same project it is the reason a ported scoring engine was taken to golden parity against
+the original implementation rather than two thousand lines that merely compiled — "done" had to be a
+number that had actually run.
+
+**A memory write that silently did nothing.** The memory check compares the `memory:` line against
+content hashes, and caught a reply claiming a file had been updated when its content was byte
+identical — a find-and-replace whose anchor had moved, which reads exactly like success. That failure
+had happened six times before the check existed.
+
+**Piling new work on unreviewed code.** The review gate refused to launch a coder while two commits of
+code sat unreviewed. The review that unblocked it then found that a test the agent had described as a
+flawed fixture never evaluated the thing it claimed to — it asserted an arithmetic relation that fails
+for a whole class of inputs. Two days of finished work had been withheld over a risk invented from a
+failure message.
+
+**A ledger that had been lying for days.** The rot check's first run surfaced three open findings whose
+files had changed since review — the same three that had been fixed in commits but left open in the
+ledger, which is exactly the drift that wastes a reviewer's entire budget.
+
+**Prose in a field that is parsed.** The loud pointer warning exists because the `▶ NOW` line had been
+written as a sentence for days, so the loader read the first word as an id, found no section, and
+injected nothing — reporting it in a parenthesis that read like an ordinary note.
+
+**And the one that says most about the design.** A reviewer pointed at hooks committed and pushed an
+hour earlier found ten faults in them, including a crash where a single locked file blinded every
+session start. That code had been written believing it was fine. What caught it was not better
+intentions — it was a separate pass with a specific brief.
+
 ## What it costs
 
 A visible share of turns goes on memory maintenance. On a long project with hard-won domain
