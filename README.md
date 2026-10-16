@@ -1,10 +1,10 @@
 # claude-brain
 
-A memory and enforcement layer for Claude Code. Three plain-text files hold a project's state, and a
-handful of hooks refuse to let the agent lie about it.
+This is not a product. It is the setup one developer ended up with after a long port, kept because it
+kept catching real mistakes. **It helped me. It might help you. Take what fits and ignore the rest.**
 
-No database, no server, no account, no dependencies beyond Python. Built for one long-running port,
-published in case the shape is useful.
+Mechanically: three plain-text files hold a project's state, and a handful of hooks refuse to let the
+agent lie about it. No database, no server, no account, no dependencies beyond Python.
 
 ## The one idea
 
@@ -21,7 +21,7 @@ and ignored*.
 ## Install
 
 ```bash
-git clone https://github.com/shanmukha96/.claudebrain claude-brain
+git clone https://github.com/shanmukha96/claude-brain
 cd claude-brain
 python install.py
 ```
